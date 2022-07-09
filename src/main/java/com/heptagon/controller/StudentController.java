@@ -7,7 +7,6 @@ import javax.validation.Valid;
 import com.heptagon.error.StudentNotFoundException;
 import com.heptagon.model.Student;
 import com.heptagon.service.StudentService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@SecurityRequirement(name = "pullagura")
+@RequestMapping(value = "/api")
 public class StudentController {
     @Autowired
     private StudentService studService;

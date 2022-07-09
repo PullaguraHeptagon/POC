@@ -1,40 +1,30 @@
 package com.heptagon.config;
 
-import com.heptagon.security.AuthEntryPointJwt;
 import com.heptagon.security.AuthTokenFilter;
-import com.heptagon.service.UserDetailsServiceImpl;
+import com.heptagon.security.JwtInterceptor;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(
-        // securedEnabled = true,
-        // jsr250Enabled = true,
-        prePostEnabled = true)
-public class Config extends WebSecurityConfigurerAdapter {
+public class Config implements WebMvcConfigurer {
+
+
 
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
-
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+    JwtInterceptor jwtInterceptor;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -42,59 +32,48 @@ public class Config extends WebSecurityConfigurerAdapter {
     }
 
 
-
-    @Override
-    public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
-
-    @Override
     @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public MappingJackson2HttpMessageConverter customHttpMessageConverter() {
+        return new MappingJackson2HttpMessageConverter();
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers("/", "/signup/**", "/signin/**", "/swagger-ui/**", "/pullagura-openapi/**", "/h2-console/**").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .httpBasic().and().exceptionHandling().authenticationEntryPoint(unauthorizedHandler)
-                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.headers().frameOptions().sameOrigin();
-        http.csrf().disable();
-        http.headers().frameOptions().disable();
-        /*http.headers().frameOptions().sameOrigin();
-        http.headers().frameOptions().disable();
-        http.cors().and().csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests().antMatchers("/","/signup/**", "/signin/**", "/swagger-ui/**", "/pullagura-openapi/**", "/h2-console/**").permitAll()
-                .anyRequest().authenticated();
-
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);*/
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .inMemoryAuthentication()
+                .withUser("user").password("password").roles("USER").password("{noop}password");
     }
 
     @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .components(new Components()
-                        .addSecuritySchemes("Authorization", new SecurityScheme().type(SecurityScheme.Type.HTTP)
-                                .scheme("Bearer")
-                                .bearerFormat("JWT"))
-                )
+    public OpenAPI customOpenAPI(@Value("${build.app.description}") String appDescription,
+                                 @Value("${build.version}") String appVersion) {
+        final String securitySchemeName = "bearerAuth";
+        /*return new OpenAPI().components(new Components()
+                .addSecuritySchemes("Authorization",
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")))
                 .info((new Info())
-                        .title("Student API")
-                        .version("1.0")
-                        .description("Test")
-                        .termsOfService("")
-                        .license((new License()).name("Copyright (c) 2022. Heptagon. All rights reserved")));
+                .title("Student API")
+                .version(appVersion)
+                .description(appDescription)
+                .termsOfService("")
+                .license((new License()).name("Copyright (c) 2022. Heptagon. All rights reserved")));*/
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement()
+                        .addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName, new SecurityScheme()
+                                .name(securitySchemeName)
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(jwtInterceptor).addPathPatterns("/api/**").excludePathPatterns("/actuator/**", "/h2-console/**",
+                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/signup/**", "/signin/**");
     }
-
 }
