@@ -12,6 +12,5 @@ import java.util.Map;
 @Setter
 @Getter
 public class JwtProperties {
-
     private Map<String, String> signature;
 }

@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.heptagon.model.Student;
 import com.heptagon.error.StudentNotFoundException;
+import org.springframework.stereotype.Service;
 
+@Service
 public interface StudentService {
 
 	public Student saveStudent(Student stud);

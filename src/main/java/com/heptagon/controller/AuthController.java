@@ -6,23 +6,33 @@ import com.heptagon.repository.RoleRepository;
 import com.heptagon.repository.UserRepository;
 import com.heptagon.security.JwtUtils;
 import com.heptagon.security.UserDetailsImpl;
+import com.nimbusds.jose.JOSEException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
+//@RequestMapping("/api/auth")
 public class AuthController {
+
+  private final Logger log = LoggerFactory.getLogger(AuthController.class);
+
   @Autowired
   AuthenticationManager authenticationManager;
 
@@ -37,6 +47,9 @@ public class AuthController {
 
   @Autowired
   JwtUtils jwtUtils;
+
+  @Autowired
+  UserDetailsService userDetailsService;
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -57,6 +70,26 @@ public class AuthController {
             userDetails.getEmail(),
             roles));
   }
+
+  /*@PostMapping("/signin")
+  public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) throws ParseException, JOSEException {
+    UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(request.getUsername());
+    List<String> roles = userDetails.getAuthorities().stream()
+            .map(item -> item.getAuthority())
+            .collect(Collectors.toList());
+    if (encoder.matches(request.getPassword(), userDetails.getPassword())) {
+      String jwtToken = jwtUtils.generateToken(userDetails);
+      HttpHeaders httpHeaders = new HttpHeaders();
+      httpHeaders.set("X-AUTH-TOKEN", jwtToken);
+      return ResponseEntity.ok().headers(httpHeaders).body(new JwtResponse(jwtToken,
+              userDetails.getId(),
+              userDetails.getUsername(),
+              userDetails.getEmail(),
+              roles));
+    } else {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+    }
+  }*/
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {

@@ -9,7 +9,6 @@ import com.heptagon.model.Student;
 import java.util.Optional;
 
 @Repository
-public interface StudentRepo extends JpaRepository<Student,Integer>
-{
+public interface StudentRepo extends JpaRepository<Student,Integer> {
 	public Optional<Student> findByStudentName(String studentName) throws StudentNotFoundException;
 }

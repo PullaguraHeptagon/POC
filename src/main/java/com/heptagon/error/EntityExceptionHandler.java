@@ -12,12 +12,9 @@ import com.heptagon.model.ErrorMessage;
 
 @ControllerAdvice
 @ResponseStatus
-public class EntityExceptionHandler extends ResponseEntityExceptionHandler{
-	
+public class EntityExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(StudentNotFoundException.class)
-	public ResponseEntity<ErrorMessage> studentNotFoundException(StudentNotFoundException e, WebRequest request)
-	{
-		ErrorMessage mesg= new ErrorMessage(HttpStatus.NOT_FOUND,e.getMessage());
-		 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mesg);
+	public ResponseEntity<ErrorMessage> studentNotFoundException(StudentNotFoundException e, WebRequest request) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage(HttpStatus.NOT_FOUND,e.getMessage()));
 	}
 }

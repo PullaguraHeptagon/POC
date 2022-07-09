@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -19,9 +21,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 
 @Configuration
 @EnableWebSecurity
-public class Config implements WebMvcConfigurer {
-
-
+public class StudentServiceAppConfig implements WebMvcConfigurer {
 
     @Autowired
     JwtInterceptor jwtInterceptor;
