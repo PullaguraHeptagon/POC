@@ -6,3 +6,5 @@ spring:
   profile:
     active: student-service
 
+logging:
+  file: E:/WorkSpace/elk.log

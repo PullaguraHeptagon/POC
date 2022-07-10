@@ -41,26 +41,26 @@ public class StudentController {
 
     @GetMapping(value = "/getStudent/{id}")
     public Student getSingleStudent(@PathVariable("id") int sid) throws StudentNotFoundException {
-        log.info("Student is not found with ID :: {}", sid);
+        log.info("Student is found with ID :: {}", sid);
         return studService.fetchStudentById(sid);
     }
 
     @DeleteMapping(value = "/deleteStudent/{id}")
     public String deleteStudById(@PathVariable("id") int sid) {
-        log.info("Student is not found with ID :: {}", sid);
+        log.info("Student is found with ID :: {}", sid);
         studService.deleteStudentById(sid);
         return "Student Deleted Successfully";
     }
 
     @PutMapping(value = "/updateStudent/{id}")
     public Student updateStudent(@PathVariable("id") int sid, @RequestBody Student stud) {
-        log.info("Student is not found with ID :: {}", sid);
+        log.info("Student is found with ID :: {}", sid);
         return studService.updateStudent(sid, stud);
     }
 
     @GetMapping(value = "/getStudent/name/{name}")
     public Student getStudentByName(@PathVariable("name") String studName) throws StudentNotFoundException {
-        log.info("Student is not found with name :: {}", studName);
+        log.info("Student is found with name :: {}", studName);
         return studService.getStudentByName(studName);
     }
 }
