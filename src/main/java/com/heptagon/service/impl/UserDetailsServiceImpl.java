@@ -1,4 +1,4 @@
-package com.heptagon.service;
+package com.heptagon.service.impl;
 
 import com.heptagon.model.User;
 import com.heptagon.repository.UserRepository;
