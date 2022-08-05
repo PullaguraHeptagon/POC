@@ -1,7 +1,7 @@
 package com.heptagon.security;
 
 
-import com.heptagon.service.impl.UserDetailsServiceImpl;
+import com.heptagon.service.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,10 +1,9 @@
-package com.heptagon.service.impl;
+package com.heptagon.service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.heptagon.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +12,7 @@ import com.heptagon.error.StudentNotFoundException;
 import com.heptagon.repository.StudentRepo;
 
 @Service
-public class StudentServiceImplementation implements StudentService {
+public class StudentServiceImplmentation implements StudentService {
     @Autowired
     private StudentRepo repo;
 
