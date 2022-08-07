@@ -6,33 +6,31 @@ import com.heptagon.repository.RoleRepository;
 import com.heptagon.repository.UserRepository;
 import com.heptagon.security.JwtUtils;
 import com.heptagon.security.UserDetailsImpl;
-import com.nimbusds.jose.JOSEException;
+import com.heptagon.service.OTPService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@CrossOrigin
 @RestController
-//@RequestMapping("/api/auth")
 public class AuthController {
-
   private final Logger log = LoggerFactory.getLogger(AuthController.class);
-
   @Autowired
   AuthenticationManager authenticationManager;
 
@@ -49,7 +47,7 @@ public class AuthController {
   JwtUtils jwtUtils;
 
   @Autowired
-  UserDetailsService userDetailsService;
+  OTPService otpService;
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -70,26 +68,6 @@ public class AuthController {
             userDetails.getEmail(),
             roles));
   }
-
-  /*@PostMapping("/signin")
-  public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) throws ParseException, JOSEException {
-    UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(request.getUsername());
-    List<String> roles = userDetails.getAuthorities().stream()
-            .map(item -> item.getAuthority())
-            .collect(Collectors.toList());
-    if (encoder.matches(request.getPassword(), userDetails.getPassword())) {
-      String jwtToken = jwtUtils.generateToken(userDetails);
-      HttpHeaders httpHeaders = new HttpHeaders();
-      httpHeaders.set("X-AUTH-TOKEN", jwtToken);
-      return ResponseEntity.ok().headers(httpHeaders).body(new JwtResponse(jwtToken,
-              userDetails.getId(),
-              userDetails.getUsername(),
-              userDetails.getEmail(),
-              roles));
-    } else {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-    }
-  }*/
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
@@ -133,7 +111,7 @@ public class AuthController {
             roles.add(modRole);
 
             break;
-          default:
+          case "user":
             Role userRole = roleRepository.findByName(ERole.ROLE_USER.name())
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(userRole);
@@ -145,5 +123,16 @@ public class AuthController {
     userRepository.save(user);
 
     return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+  }
+
+  @RequestMapping(value="/logout", method = RequestMethod.GET)
+  public @ResponseBody String logout(HttpServletRequest request, HttpServletResponse response){
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null){
+      String username = auth.getName();
+      otpService.clearOTP(username);
+      new SecurityContextLogoutHandler().logout(request, response, auth);
+    }
+    return "Logged out successfully";
   }
 }

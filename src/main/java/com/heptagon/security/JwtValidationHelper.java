@@ -1,5 +1,7 @@
 package com.heptagon.security;
 
+import com.heptagon.error.AuthFailureException;
+import com.heptagon.error.ForbiddenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -17,31 +19,27 @@ public class JwtValidationHelper {
     @Value("${jwt.enabled:true}")
     private Boolean isJwtValidationEnabled;
 
-    public void validateIssuerAndExpiration(String authHeader, String keyInBase64, String issuer) throws Exception {
+    public void validateIssuerAndExpiration(String authHeader, String keyInBase64, String issuer) throws ForbiddenException, AuthFailureException {
         if(!isJwtValidationEnabled) {
             return;
         }
-        if(keyInBase64.isEmpty() || authHeader.length() < 8 || !authHeader.startsWith(BEARER_TOKEN_PREFIX)) {
-            throw  new Exception("Invalid Token");
+        if(StringUtils.isAnyBlank(keyInBase64,issuer,authHeader) || (StringUtils.isNotBlank(authHeader) && (authHeader.length() < 8 || !authHeader.startsWith(BEARER_TOKEN_PREFIX)))) {
+            throw  new ForbiddenException();
         }
         String token = authHeader.substring(7).trim();
         validateToken(token, keyInBase64);
     }
 
-    private void validateToken(final String token, final String key) throws Exception {
-        if(StringUtils.isBlank(key)) {
-            logger.error("Failed to obtain the key to parse JWT token");
-            throw new Exception("Invalid Token");
-        }
+    private void validateToken(final String token, final String key) throws AuthFailureException {
         Jws<Claims> claimsJws = null;
         try {
             claimsJws = Jwts.parser().setSigningKey(key).parseClaimsJws(token);
         } catch (Exception e) {
             logger.error("Failed to parse JWT", e);
-        }
-        if(claimsJws == null) {
-            logger.error("After parsing JWT, there are no claims for JWT token.");
-            throw new Exception("Failed to find any claims in the JWT");
+            if(claimsJws == null) {
+                logger.error("After parsing JWT, there are no claims for JWT token.");
+                throw new AuthFailureException();
+            }
         }
     }
 }

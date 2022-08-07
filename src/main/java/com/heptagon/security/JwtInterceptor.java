@@ -1,5 +1,7 @@
 package com.heptagon.security;
 
+import com.heptagon.error.AuthFailureException;
+import com.heptagon.error.ForbiddenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +25,20 @@ public class JwtInterceptor implements HandlerInterceptor {
     JwtProperties jwtProperties;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
             String authHeader = request.getHeader(AUTHORIZATION_HEADER);
             jwtValidationHelper.validateIssuerAndExpiration(authHeader,
                     jwtProperties.getSignature().get("key"),
                     jwtProperties.getSignature().get("issuer"));
-        } catch (Exception e) {
-            request.setAttribute(ERROR_STATUS, response);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+        } catch (ForbiddenException e) {
             logger.error("Security Exception :: Http Status {} for method {}, uri {} ",
                     HttpServletResponse.SC_FORBIDDEN, request.getMethod(), request.getRequestURI(), e);
-            return false;
+            throw new ForbiddenException();
+        } catch (AuthFailureException e) {
+            logger.error("Security Exception :: Http Status {} for method {}, uri {} ",
+                    HttpServletResponse.SC_UNAUTHORIZED, request.getMethod(), request.getRequestURI(), e);
+            throw new AuthFailureException();
         }
         return true;
     }

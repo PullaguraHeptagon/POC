@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -73,7 +71,7 @@ public class StudentServiceAppConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(jwtInterceptor).addPathPatterns("/api/**").excludePathPatterns("/actuator/**", "/h2-console/**",
+        registry.addInterceptor(jwtInterceptor).addPathPatterns("/api/**", "/otp/**").excludePathPatterns("/actuator/**", "/h2-console/**",
                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/signup/**", "/signin/**");
     }
 }
